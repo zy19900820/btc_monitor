@@ -1,0 +1,6 @@
+[mysql]
+db_ip = "127.0.0.1"
+db_port = 3306
+db = "btc"
+name = "root"
+password = "Xjz!1234"
