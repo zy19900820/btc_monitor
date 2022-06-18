@@ -4,7 +4,12 @@ import (
 	conf "btc_monitor/config"
 	"btc_monitor/netApi"
 	"btc_monitor/sql"
+	"bytes"
 	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 //func first() {
@@ -199,4 +204,74 @@ func main() {
 			return
 		}
 	}
+
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+
+	//send mail test
+	// err = sendmail("test", "111111", cfg.Mail.Send_address, "1565764387@qq.com", cfg.Mail.Auth_code)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	router.Use(Cors())
+
+	router.GET("/hello", HandleHello)
+
+	router.Run(":" + strconv.Itoa(cfg.Port))
+}
+
+type bodyLogWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w bodyLogWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+func (w bodyLogWriter) WriteString(s string) (int, error) {
+	w.body.WriteString(s)
+	return w.ResponseWriter.WriteString(s)
+}
+
+func Cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
+		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+		}
+
+		bodyLogWriter := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		c.Writer = bodyLogWriter
+
+		//startTime := time.Now().Format("2006-01-02 15:04:05")
+		c.Next()
+
+		//responseBody := bodyLogWriter.body.String()
+
+		//endTime := time.Now().Format("2006-01-02 15:04:05")
+
+		// if c.Request.Method == "POST" {
+		// 	c.Request.ParseForm()
+		// }
+	}
+}
+
+type RESPONSE struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+func HandleHello(context *gin.Context) {
+	response := RESPONSE{Code: 0, Message: "OK"}
+	context.JSON(http.StatusOK, response)
 }

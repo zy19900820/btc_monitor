@@ -13,6 +13,7 @@ type MysqlConf struct {
 }
 
 type ServerConf struct {
+	Port  int
 	Mysql MysqlConf
 }
 
