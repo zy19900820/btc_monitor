@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -162,6 +163,7 @@ import (
 // }
 
 var gCfg conf.ServerConf
+var gBlockHeight int64
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -203,6 +205,28 @@ func main() {
 			log.Println(err)
 			return
 		}
+
+		for i := 0; i < len(netInfos)/40; i++ {
+			var adds []string
+
+			for j := 0; j < 40; j++ {
+				adds = append(adds, netInfos[i*40+j].Addr)
+			}
+
+			result, err := netApi.GetMulAddressInfo(adds)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			err = sql.UpdateNetInfos(result)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
+	} else {
+		//从数据库获取前200大户地址
+		//更新地址余额
 	}
 
 	gin.SetMode(gin.ReleaseMode)
@@ -218,6 +242,7 @@ func main() {
 
 	router.GET("/hello", HandleHello)
 
+	go listenLatestBlock()
 	router.Run(":" + strconv.Itoa(cfg.Port))
 }
 
@@ -274,4 +299,23 @@ type RESPONSE struct {
 func HandleHello(context *gin.Context) {
 	response := RESPONSE{Code: 0, Message: "OK"}
 	context.JSON(http.StatusOK, response)
+}
+
+func listenLatestBlock() {
+	for {
+		height, err := netApi.GetLatestBlock()
+		if err != nil {
+			log.Println(err)
+			time.Sleep(time.Second * 300)
+			continue
+		}
+		//log.Println(height)
+		if gBlockHeight == height {
+			time.Sleep(time.Second * 300)
+			continue
+		}
+		//解析获得转账数量>10地址
+		//更新数据库
+		time.Sleep(time.Second * 300)
+	}
 }

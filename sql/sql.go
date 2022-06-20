@@ -64,7 +64,7 @@ func CheckNetInit() (bool, error) {
 	}
 	if count == 0 {
 		return true, nil
-	} else if count > 200 {
+	} else if count >= 200 {
 		return false, nil
 	} else {
 		return false, xerrors.New("db count less 200")
@@ -89,6 +89,36 @@ func InsertNetInfos(netInfos []netApi.LOCAL_BTC_ADDR_INFO) error {
 		_, err = tx.Exec(insertSql, info.Addr, info.Alias, timestamp, timeStr, info.Count)
 		if err != nil {
 			log.Println(insertSql, " addr:", info.Addr, " alias:", info.Alias, " value:", info.Count)
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit() // 提交事务
+	if err != nil {
+		tx.Rollback() // 回滚
+		return err
+	}
+
+	return nil
+}
+
+func UpdateNetInfos(netInfos []netApi.LOCAL_BTC_ADDR_INFO) error {
+	tx, err := db.Beginx() // 开启事务
+	if err != nil {
+		if tx != nil {
+			tx.Rollback()
+		}
+		return err
+	}
+
+	timestamp := time.Now().Unix()
+	timeStr := time.Now().Format("2006-01-02 15:04:05")
+	for _, info := range netInfos {
+		updateSql := "update " + TABLE_ADDRESS_INFO + " set value = ?, timestamp = ?, time = ? where address = ? "
+		_, err = tx.Exec(updateSql, info.Count, timestamp, timeStr, info.Addr)
+		if err != nil {
+			log.Println(updateSql, " value:", info.Count, " timestamp:", timestamp, " time:", timeStr, " address:", info.Addr)
 			tx.Rollback()
 			return err
 		}
