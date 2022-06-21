@@ -20,8 +20,19 @@ create table if not exists t_address_info
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 `
 
+var t_top_daily_info = `
+create table if not exists t_top_daily_info
+(
+     id bigint(20) not NULL AUTO_INCREMENT primary key,
+	 tag integer not null default 0,
+	 time varchar(64) not null default "",
+	 value decimal(26, 8) not null default 0
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+`
+
 func createOrderTables(db *sqlx.DB, dbName string) {
 	db.MustExec(db_create)
 	db.MustExec("USE " + dbName)
 	db.MustExec(t_address_info)
+	db.MustExec(t_top_daily_info)
 }

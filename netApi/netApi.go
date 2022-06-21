@@ -141,6 +141,24 @@ func GetLatestBlock() (int64, error) {
 	return latestHeight.Height, nil
 }
 
+func GetHeightBlockInfo(height int64) (string, error) {
+	url := "https://blockchain.info/block-height/" + strconv.FormatInt(height, 10)
+	res, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	robots, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	if res.StatusCode != 200 {
+		return "", xerrors.New("http error")
+	}
+	return string(robots), nil
+}
+
 func getPage(i int) (string, error) {
 	url := "https://btc.tokenview.com/api/address/richrange/btc/" + strconv.Itoa(i) + "/10"
 	res, err := http.Get(url)
