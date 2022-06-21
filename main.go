@@ -496,8 +496,8 @@ func listenLatestBlock() {
 				if ok {
 					dingString += " alias:" + alias
 				}
-				dingString += " 转出数量:" + strconv.FormatFloat(output.Value, 'f', -1, 64)
-				dingString += " 转出后余额:" + strconv.FormatFloat(getNowBalance(output.Address, walletInfoResults), 'f', -1, 64)
+				dingString += " 转入数量:" + strconv.FormatFloat(output.Value, 'f', -1, 64)
+				dingString += " 转入后余额:" + strconv.FormatFloat(getNowBalance(output.Address, walletInfoResults), 'f', -1, 64)
 			}
 			ding.DingInfo(dingString, true)
 		}
